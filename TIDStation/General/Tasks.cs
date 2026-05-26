@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TIDStation.Radio;
+﻿using TIDStation.Radio;
 using TIDStation.Serial;
 
 namespace TIDStation.General

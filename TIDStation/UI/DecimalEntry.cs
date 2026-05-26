@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Automation.Text;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using TIDStation.General;
@@ -29,7 +23,7 @@ namespace TIDStation.UI
             HorizontalContentAlignment = HorizontalAlignment.Right;
         }
 
-        public int MaxTextLength => WholeDigits + DecimalPlaces + DecimalPlaces.Sign();
+        public int MaxTextLength => WholeDigits + DecimalPlaces + Math.Sign(DecimalPlaces);
 
         public void KeyIn(Key k)
         {

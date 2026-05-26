@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -61,25 +57,35 @@ namespace TIDStation.Firmware
 
         static Patches()
         {
-            Patch p;            
-            foreach (string file in Directory.GetFiles(@"..\..\..\.."))
+            string searchDir = Path.GetFullPath(@"..\..\..\.."); 
+            try
             {
-                if(file.ToLower().EndsWith(".hex"))
+                foreach (string file in Directory.GetFiles(searchDir))
                 {
-                    try
+                    if (Path.GetExtension(file).Equals(".hex", StringComparison.OrdinalIgnoreCase))
                     {
-                        p = new()
+                        try
                         {
-                            HorizontalAlignment = HorizontalAlignment.Left,
-                            ID = idCnt++,
-                            IsChecked = false,
-                            Header = $"File: {Path.GetFileName(file)}",
-                            Hex = File.ReadAllText(file)
-                        };
-                        List.Add(p);
+                            var p = new Patch()
+                            {
+                                HorizontalAlignment = HorizontalAlignment.Left,
+                                ID = idCnt++,
+                                IsChecked = false,
+                                Header = $"File: {Path.GetFileName(file)}",
+                                Hex = File.ReadAllText(file)
+                            };
+                            List.Add(p);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Failed to load hex file '{file}': {ex.Message}");
+                        }
                     }
-                    catch { }
                 }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to enumerate hex files in '{searchDir}': {ex.Message}");
             }
         }
 
