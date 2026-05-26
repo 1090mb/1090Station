@@ -1,0 +1,76 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'   # Triggers on version tags like v1.0.0, v0.37.1b, etc.
+
+permissions:
+  contents: write  # Required to create GitHub Releases
+
+jobs:
+  build:
+    name: Build TIDStation
+    runs-on: windows-latest
+
+    steps:
+      # ── 1. Check out the repository ──────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Set up .NET 8 ─────────────────────────────────────────────────
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # ── 3. Restore NuGet packages ─────────────────────────────────────────
+      - name: Restore dependencies
+        run: dotnet restore TIDStation/TIDStation.csproj
+
+      # ── 4. Publish a self-contained single-file executable ────────────────
+      #       -r win-x64              → Windows 64-bit
+      #       --self-contained true   → bundles the .NET runtime (no install needed)
+      #       PublishSingleFile=true  → merges everything into one .exe
+      #       IncludeNativeLibrariesForSelfExtract=true → already set in .csproj
+      - name: Publish single-file executable
+        run: |
+          dotnet publish TIDStation/TIDStation.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:PublishReadyToRun=true `
+            -o ./publish
+
+      # ── 5. Rename the output for a clean release asset name ───────────────
+      - name: Rename output executable
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $dest = "TIDStation-$tag-win-x64.exe"
+          Move-Item -Path "./publish/TIDStation.exe" -Destination $dest
+          echo "ASSET_NAME=$dest" >> $env:GITHUB_ENV
+
+      # ── 6. Create the GitHub Release and upload the .exe ─────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "TID Station ${{ github.ref_name }}"
+          body: |
+            ## TID Station ${{ github.ref_name }}
+
+            ### Download
+            Download **`${{ env.ASSET_NAME }}`** below — it is a **self-contained, single-file executable**.  
+            No installation or .NET runtime required. Just download and run.
+
+            > **Windows SmartScreen:** If Windows warns about an unknown publisher, click **More info → Run anyway**.
+
+            ### What's new
+            *(Add your release notes here, or edit this release on GitHub after it is created.)*
+
+            ### Requirements
+            - Windows 10 or later (64-bit)
+            - Compatible 1090-series radio (H3 / H8) with USB programming cable
+          files: ${{ env.ASSET_NAME }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
