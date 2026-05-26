@@ -48,7 +48,8 @@ namespace TIDStation.UI
 
         private static Key NormalizeNumPad(Key k)
         {
-            return k >= Key.NumPad0 && k <= Key.NumPad9 ? k - (Key.NumPad0 - Key.D0) : k;
+            const int numPadOffset = Key.NumPad0 - Key.D0;
+            return k >= Key.NumPad0 && k <= Key.NumPad9 ? k - numPadOffset : k;
         }
 
         public void KeyIn(Key k)
