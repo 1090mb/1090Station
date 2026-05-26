@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 using TIDStation.General;
 using TIDStation.Serial;
 
@@ -36,10 +31,6 @@ namespace TIDStation.Radio
             {
                 Comms.EEPROM[EnabledAddr] &= (byte)~EnabledBit;
                 Comms.Write(EnabledAddr, (byte)(EnabledByte | (value ? EnabledBit : 0)));
-                OnPropertyChanged(nameof(Enabled));
-                TD.Update();
-                OnPropertyChanged(nameof(Frequency));
-                TD.Update();
             }
         }
 
@@ -78,8 +69,6 @@ namespace TIDStation.Radio
                     Enabled = false;
                 }
                 OnPropertyChanged(nameof(Frequency));
-                TD.Update();
-                OnPropertyChanged(nameof(Enabled));
                 TD.Update();
             }
         }

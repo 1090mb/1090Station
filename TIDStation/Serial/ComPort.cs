@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Diagnostics;
 using System.IO.Ports;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TIDStation.Serial
 {
     public class ComPort
     {
-        public bool Active { get; private set; } = false;
+        private volatile bool active;
+        public bool Active => active;
 
         private readonly SerialPort port = null!;
         private readonly Task loopTask = null!;
@@ -22,17 +19,20 @@ namespace TIDStation.Serial
             {
                 port = new($"COM{number}", baud, parity, bits, stopbits);
                 port.Open();
-                Active = true;
+                active = true;
                 loopTask = Task.Run(Loop);
                 return;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"ComPort open failed: {ex.Message}");
+            }
             Close();
         }
 
         public void Close()
         {
-            Active = false;
+            active = false;
             try { port.ReadTimeout = 100; } catch { }
             try { port.WriteTimeout = 100; } catch { }
             try { port.Close(); } catch { }
@@ -49,7 +49,10 @@ namespace TIDStation.Serial
             {
                 port.Write(data, offset, len);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"ComPort send failed: {ex.Message}");
+            }
         }
 
         public void Send(byte byt)
@@ -59,7 +62,7 @@ namespace TIDStation.Serial
 
         private void Loop()
         {
-            while (Active)
+            while (active)
             {
                 byte[] bytes = new byte[32768];
                 int br;

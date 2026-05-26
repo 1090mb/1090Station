@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -87,10 +82,16 @@ namespace TIDStation.UI
             while (timing);
         }
 
+        private static Key NormalizeNumPad(Key k)
+        {
+            return k >= Key.NumPad0 && k <= Key.NumPad9 ? k - (Key.NumPad0 - Key.D0) : k;
+        }
+
         public void KeyIn(Key k)
         {
             if (inputMode)
             {
+                k = NormalizeNumPad(k);
                 Tasks.Watch = Timer();
                 switch (k)
                 {
@@ -109,26 +110,7 @@ namespace TIDStation.UI
                     case Key.Enter:
                         EndInput();
                         break;
-                    case Key.NumPad0: KeyIn(Key.D0); break;
-                    case Key.NumPad1: KeyIn(Key.D1); break;
-                    case Key.NumPad2: KeyIn(Key.D2); break;
-                    case Key.NumPad3: KeyIn(Key.D3); break;
-                    case Key.NumPad4: KeyIn(Key.D4); break;
-                    case Key.NumPad5: KeyIn(Key.D5); break;
-                    case Key.NumPad6: KeyIn(Key.D6); break;
-                    case Key.NumPad7: KeyIn(Key.D7); break;
-                    case Key.NumPad8: KeyIn(Key.D8); break;
-                    case Key.NumPad9: KeyIn(Key.D9); break;
-                    case Key.D0:
-                    case Key.D1:
-                    case Key.D2:
-                    case Key.D3:
-                    case Key.D4:
-                    case Key.D5:
-                    case Key.D6:
-                    case Key.D7:
-                    case Key.D8:
-                    case Key.D9:
+                    case >= Key.D0 and <= Key.D9:
                         if (Text.Length == 3 && !Text.Contains('.'))
                             Text += '.';
                         Text += k - Key.D0;
@@ -158,11 +140,14 @@ namespace TIDStation.UI
                     EndInput();
                 }
                 else
-                if ((k >= Key.D0 && k <= Key.D9) || (k >= Key.NumPad0 && k <= Key.NumPad9))
                 {
-                    inputMode = true;
-                    Text = string.Empty;
-                    KeyIn(k);
+                    k = NormalizeNumPad(k);
+                    if (k >= Key.D0 && k <= Key.D9)
+                    {
+                        inputMode = true;
+                        Text = string.Empty;
+                        KeyIn(k);
+                    }
                 }
             }
         }

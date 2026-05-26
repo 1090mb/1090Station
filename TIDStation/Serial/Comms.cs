@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
-using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using TIDStation.Data;
@@ -378,8 +373,6 @@ namespace TIDStation.Serial
             {
                 lock (sync2)
                 {
-                    //ignoreUnprompted = true;
-                    bool okay = false;
                     for (bool once = true; once; once = false)
                     {
                         if (readExtMem)
@@ -526,27 +519,8 @@ namespace TIDStation.Serial
                             port!.Send(radioIdReq);
                             if (!sync.Wait()) break;
                         }
-                        okay = true;
                         Thread.Sleep(250);
                     }
-                    /*
-                    if(!okay && LiveMode)
-                    {
-                        Debug.WriteLine("Desync");
-                        lock (sync)
-                        {
-                            int to = 0;
-                            bool sok;
-                            do
-                            {
-                                port!.Send([0x50, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-                            }
-                            while (!(sok = sync.Wait(150)) && to++ < 10);
-                            Debug.WriteLine(sok ? "Resynced" : "Unable to Resync");
-                        }
-                    }
-                    */
-                    //ignoreUnprompted = false;
                 }
             });
             task.Start();
@@ -586,7 +560,6 @@ namespace TIDStation.Serial
         private static int byte3 = 0;
         private static int extMemCnt = 0;
         private static int lastdebug = 0;
-        private static int delayer = 0;
         private static void Received(byte[] data)
         {
             foreach (byte b in data)
@@ -599,7 +572,6 @@ namespace TIDStation.Serial
                         {
                             //if (mbytes[0]==0x46 || mbytes[0]==0x79)
                             {
-                                delayer = 0;
                                 Debug.WriteLine($"0x{mbytes[0]:X2}, 0x{mbytes[1]:X2}, 0x{mbytes[2]:X2}");
                             }
                             state = 0;
@@ -788,7 +760,10 @@ namespace TIDStation.Serial
                     com = new(Context.Instance.FlashComPort.Value, 115200, Parity.None, 8, StopBits.One) { ReadTimeout = 500 };
                     com.Open();
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Failed to open flash COM port: {ex.Message}");
+                }
                 if (com == null) return $"Err open {Context.Instance.FlashComPort.Value}";                
                 using (com)
                 {
